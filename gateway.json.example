@@ -1,0 +1,11 @@
+{
+  "accounts": [],
+  "mihomo": {
+    "enabled": true,
+    "api_port": 19090,
+    "base_port": 10801,
+    "auto_bind": true,
+    "subscriptions": []
+  },
+  "settings": {}
+}

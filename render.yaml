@@ -1,0 +1,38 @@
+# Render Blueprint — Z.AI2API (zai2api)
+# 一键部署: https://render.com/deploy?repo=<你的仓库地址>
+#
+# 说明:
+#   - runtime: docker  → 直接用仓库里的 Dockerfile 构建
+#   - plan: starter     → 最便宜的付费档(约 $7/月),支持持久化磁盘
+#                         (Render 已取消新用户的 Docker 免费档)
+#   - disk              → 持久化 /app/data(gateway.json / tokens.sqlite / mihomo 运行时),
+#                         否则每次重新部署会丢失账号与状态
+#   - PORT=8088         → 与 Dockerfile EXPOSE / .env 保持一致,Render 据此转发流量
+#   - AUTH_TOKEN        → 客户端调用 API 的 Bearer Token,部署时在 Render 后台填写
+#   - ZAI_TOKEN         → 可选,Z.AI 的 JWT(不填则仅 glm-4.7 可用,游客模式)
+
+services:
+  - type: web
+    name: zai2api
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    disk:
+      name: zai2api-data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      - key: PORT
+        value: "8088"
+      - key: HOST
+        value: 0.0.0.0
+      - key: TZ
+        value: Asia/Shanghai
+      - key: AUTH_TOKEN
+        sync: false
+      - key: ZAI_TOKEN
+        sync: false
+      - key: ZAI_TOKENS
+        sync: false

@@ -1,0 +1,16 @@
+services:
+  zai2api:
+    build: .
+    container_name: zai2api
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      # 持久化：gateway.json 状态、令牌库、mihomo 运行时
+      - ./data:/app/data
+      # 如需自定义 .env，直接挂载覆盖
+      - ./.env:/app/.env
+      # 如镜像未内置 mihomo，可挂载自备二进制并设置 MIHOMO_PATH=/app/bin/mihomo
+      # - ./bin:/app/bin:ro
