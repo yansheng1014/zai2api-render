@@ -1,0 +1,42 @@
+# Render 免费档保活:每 10 分钟 ping 一次,避免 15 分钟无流量自动休眠。
+# 完全免费,无需第三方账号。GitHub Actions cron 为 UTC 时间。
+#
+# 使用方法:
+#   1. 在 Render 部署完成后,拿到服务 URL(形如 https://zai2api-xxxx.onrender.com)
+#   2. 在 GitHub 仓库 → Settings → Secrets and variables → Actions → New repository secret
+#      Name:  RENDER_URL
+#      Value: https://zai2api-xxxx.onrender.com
+#   3. 之后每 10 分钟自动 ping。也可在 Actions 标签页手动 Run workflow 测试。
+#
+# 注意:GitHub Actions 规定仓库 60 天无提交时定时任务会被自动暂停,
+#       届时随便提交一次或手动 Run workflow 即可恢复。
+
+name: Keep Alive
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # 每 10 分钟(UTC)
+  workflow_dispatch:         # 支持手动触发
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    env:
+      RENDER_URL: ${{ secrets.RENDER_URL }}
+    steps:
+      - name: Ping Render app
+        if: ${{ env.RENDER_URL != '' }}
+        run: |
+          echo "Pinging $RENDER_URL ..."
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 "$RENDER_URL" || echo "000")
+          echo "HTTP status: $code"
+          # 任意状态码都算"有响应=已唤醒",不因 4xx/5xx 失败
+          if [ "$code" = "000" ]; then
+            echo "::warning::请求未收到响应(可能正在冷启动),下次会重试"
+            exit 0
+          fi
+
+      - name: Skip (RENDER_URL 未配置)
+        if: ${{ env.RENDER_URL == '' }}
+        run: |
+          echo "::warning::未配置 RENDER_URL secret。请在 Render 部署完成后,到仓库 Settings → Secrets → Actions 添加 RENDER_URL=https://你的服务地址.onrender.com"
